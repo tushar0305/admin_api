@@ -16,6 +16,7 @@ conn = mysql.connector.connect(
 
 @app.route("/api/verify_otp", methods=['GET', 'POST'])
 def get_data():
+    global session
     cursor = conn.cursor()
     session['email'] = request.json["email"]
     session['otp'] = request.json["otp"]
@@ -23,13 +24,19 @@ def get_data():
     cursor.execute('SELECT * FROM user_info WHERE uemail = %s AND otp = %s',
                    (session['email'], session['otp']))
     # Fetch one record and return result
-    account = cursor.fetchone()
+    account = cursor.fetchall()
     session['uid'] = account[0]
+
+    # Get the column names
+    column_names = [column[0] for column in cursor.description]
+
+    # Combine the column names and the data
+    result = [{column_name: row[i] for i, column_name in enumerate(column_names)} for row in account]
 
     # Return the result as a JSON response
     if account is not None:
         is_valid = True
-        return jsonify(account), 200
+        return jsonify(result[0]), 200
     else:
         return jsonify({"message": "The provided credentials are invalid"}), 400
 
@@ -73,30 +80,44 @@ def login():
     cursor.execute(
         'SELECT * FROM user_info WHERE uemail = %s AND upass = %s', (email, password))
     # Fetch one record and return result
-    account = cursor.fetchone()
+    account = cursor.fetchall()
 
-    session['uid'] = account[0]
+    # Get the column names
+    column_names = [column[0] for column in cursor.description]
+
+    # Combine the column names and the data
+    result = [{column_name: row[i] for i, column_name in enumerate(column_names)} for row in account]
+
+    session['uid'] = result[0]['uid']
 
     # Return the result as a JSON response
     if account is not None:
         is_valid = True
-        return jsonify(account), 200
+        return jsonify(result[0]), 200
     else:
         return jsonify({"message": "The provided credentials are invalid"}), 400
 
 # Route to Show list of devices
 @app.route("/api/devices", methods=['GET', 'POST'])
 def devices():
+    global session
     cursor = conn.cursor()
-    uid = session.get('uid')
+    uid = session['uid']
     cursor.execute("SELECT * FROM device_info WHERE uid=%s", (uid,))
+
     # Fetch all record and return result
     devices = cursor.fetchall()
+
+    # Get the column names
+    column_names = [column[0] for column in cursor.description]
+
+    # Combine the column names and the data
+    result = [{column_name: row[i] for i, column_name in enumerate(column_names)} for row in devices]
 
     # Return the result as a JSON response
     if devices is not None:
         is_valid = True
-        return jsonify(devices), 200
+        return jsonify(result), 200
     else:
         return jsonify({"message": "Invalid Response"}), 400
 

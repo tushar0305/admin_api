@@ -135,3 +135,6 @@ def logout():
         return jsonify({"message": "Sucessfully Logout"})
     # Redirect to login page
     return redirect(url_for('/api/login'))
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=8080)

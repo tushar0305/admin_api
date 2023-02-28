@@ -7,10 +7,11 @@ app.secret_key = 'Thinkfinity Labs'
 
 # Connect to the MySQL database
 conn = mysql.connector.connect(
-    host='localhost',
-    user='root',
-    password='',
-    database='iot-sub-zero'
+    host='sql862.main-hosting.eu',
+    user='u107969203_iotdb',
+    password='Welcome@123',
+    database='u107969203_iot',
+    port='3306',
 )
 
 
@@ -122,7 +123,7 @@ def devices():
         return jsonify({"message": "Invalid Response"}), 400
 
 # Route to Change Device Name
-@app.route("/api/change_name", methods=['GET', 'POST'])
+@app.route("/api/change_name", methods=['PUT'])
 def change_name():
     deviceid = request.json["deviceid"]
     new_name = request.json["new_name"]
@@ -134,7 +135,7 @@ def change_name():
     conn.commit()
     return jsonify({'message': 'Name Succesfully Changed'}), 200
 
-@app.route("/api/device_info", methods=['GET', 'POST'])
+@app.route("/api/device_info", methods=['PUT'])
 def device_info():
     dTemp = request.json["dTemp"]
     temp = request.json["temp"]
@@ -143,6 +144,18 @@ def device_info():
     #Set Delta Temprature and Temprature
 
     cursor.execute('UPDATE device_info SET dt = %s, temp = %s WHERE deviceid = %s', (dTemp, temp, deviceid))
+    conn.commit()
+    return jsonify({'message': 'Successfully Updated'}), 200
+
+#Change API State (ON/OFF)
+@app.route("/api/device_state", methods=['PUT'])
+def device_state():
+    state = request.json["state"]
+    deviceid = request.json["deviceid"]
+    cursor = conn.cursor()
+    #Set Device State
+
+    cursor.execute('UPDATE device_info SET dstate = %s WHERE deviceid = %s', (dstate, deviceid))
     conn.commit()
     return jsonify({'message': 'Successfully Updated'}), 200
 
